@@ -1,5 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 import { 
   X, 
   MessageSquare, 
@@ -10,6 +13,8 @@ import {
   Menu,
   ArrowRight
 } from 'lucide-react';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const WHATSAPP_URL = "https://wa.me/910000000000?text=Hi!%20I%20saw%20your%20website.%20I%20want%20to%20discuss%20a%20website%20project.";
 
@@ -160,8 +165,41 @@ function Navbar() {
 }
 
 function Hero() {
+  const container = useRef<HTMLElement>(null);
+  const textRef = useRef<HTMLHeadingElement>(null);
+  
+  useGSAP(() => {
+    // Reveal text lines staggering upwards with a clip mask
+    const lines = gsap.utils.toArray('.hero-line');
+    gsap.fromTo(lines, 
+      { y: 150, rotateZ: 5, opacity: 0 },
+      { 
+        y: 0, 
+        rotateZ: 0,
+        opacity: 1, 
+        duration: 1.5, 
+        stagger: 0.15, 
+        ease: "power4.out",
+        delay: 0.2
+      }
+    );
+
+    // Parallax effect on scroll applied to the container rather than conflicting lines
+    gsap.to(textRef.current, {
+      y: -100,
+      opacity: 0.2,
+      scrollTrigger: {
+        trigger: container.current,
+        start: "top top",
+        end: "bottom top",
+        scrub: 1,
+      }
+    });
+
+  }, { scope: container });
+
   return (
-    <section className="relative pt-32 pb-40 overflow-hidden">
+    <section ref={container} className="relative pt-32 pb-40 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
         <FadeIn>
           <div className="inline-flex items-center gap-3 px-4 py-2 border border-white/20 text-white/60 text-[9px] uppercase tracking-[0.2em] mb-12">
@@ -173,23 +211,21 @@ function Hero() {
           </div>
         </FadeIn>
         
-        <FadeIn delay={0.1}>
-          <h1 className="flex flex-col items-center font-serif text-white leading-[0.85] tracking-tight mb-8">
-            <span className="text-6xl md:text-[110px] font-normal mb-2">Your business</span>
-            <span className="text-4xl md:text-[90px] font-sans font-bold uppercase tracking-[-0.04em] text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.4)]">
-              deserves a
-            </span>
-            <span className="text-6xl md:text-[110px] font-normal mt-2 italic pr-4">real website.</span>
-          </h1>
-        </FadeIn>
+        <h1 ref={textRef} className="flex flex-col items-center font-serif text-white leading-[0.85] tracking-tight mb-8 perspective-[1000px]">
+          <div className="overflow-hidden p-2"><span className="hero-line block text-6xl md:text-[110px] font-normal mb-2 origin-bottom-left">Your business</span></div>
+          <div className="overflow-hidden p-2"><span className="hero-line block text-4xl md:text-[90px] font-sans font-bold uppercase tracking-[-0.04em] text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.4)] origin-bottom-left">
+            deserves a
+          </span></div>
+          <div className="overflow-hidden p-2"><span className="hero-line block text-6xl md:text-[110px] font-normal mt-2 italic pr-4 origin-bottom-left">real website.</span></div>
+        </h1>
 
-        <FadeIn delay={0.2}>
+        <FadeIn delay={0.8}>
           <p className="text-[14px] text-white/40 mb-16 max-w-xl mx-auto leading-[1.8] font-sans">
             Not a template. Not a compromise. We build fast, affordable websites for local businesses, schools & startups across India.
           </p>
         </FadeIn>
 
-        <FadeIn delay={0.3} className="flex flex-col items-center w-full">
+        <FadeIn delay={0.9} className="flex flex-col items-center w-full">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-8 w-full max-w-lg mx-auto">
             <MagneticFluidButton 
               href={WHATSAPP_URL}
@@ -219,6 +255,47 @@ function Hero() {
 }
 
 function AudienceSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useGSAP(() => {
+    // Parallax on cards
+    const cards = gsap.utils.toArray('.audience-card');
+    
+    // Check if we're on desktop for extreme parallax
+    const isDesktop = window.innerWidth > 768;
+
+    gsap.to(cards, {
+      y: (i) => {
+        // Apply varying speed multipliers to different cards for asymmetrical drift
+        const speed = i % 2 === 0 ? 0.3 : 1.2;
+        return isDesktop ? -150 * speed : -50 * speed;
+      },
+      ease: "none",
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: "top bottom",
+        end: "bottom top",
+        scrub: 1.5,
+      }
+    });
+
+    // Sticky fade text effect
+    gsap.fromTo('.audience-title',
+      { opacity: 0.3, y: 50 },
+      {
+        opacity: 1,
+        y: 0,
+        scrollTrigger: {
+          trigger: '.audience-title',
+          start: "top 80%",
+          end: "top 40%",
+          scrub: 1,
+        }
+      }
+    );
+
+  }, { scope: sectionRef });
+
   const audiences = [
     {
       icon: <Store className="w-6 h-6"/>,
@@ -259,20 +336,23 @@ function AudienceSection() {
   ];
 
   return (
-    <section id="services" className="py-32 border-t border-white/10 relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <FadeIn>
-          <div className="max-w-3xl mb-24 md:mb-32">
-            <h2 className="text-4xl md:text-5xl lg:text-7xl font-serif text-white mb-8 leading-[1.1] tracking-tight">
+    <section ref={sectionRef} id="services" className="py-32 border-t border-white/10 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col md:flex-row gap-16 lg:gap-24">
+        
+        {/* Sticky Sidebar Title */}
+        <div className="md:w-1/3 relative">
+          <div className="md:sticky md:top-32 font-serif">
+            <h2 className="audience-title text-4xl md:text-5xl lg:text-7xl text-white mb-8 leading-[1.1] tracking-tight">
               We build for people who are serious about their business.
             </h2>
             <div className="h-px w-24 bg-white/20"></div>
           </div>
-        </FadeIn>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 items-start">
+        {/* Cards container */}
+        <div className="md:w-2/3 grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 xl:gap-10 items-start">
           {audiences.map((aud, i) => (
-            <FadeIn key={i} delay={i * 0.1} className={`${aud.className}`}>
+            <div key={i} className={`${aud.className} audience-card will-change-transform`}>
               <div className={`p-10 md:p-14 border border-white/10 bg-[#050505] hover:border-white/30 transition-all duration-700 group relative overflow-hidden flex flex-col justify-between ${aud.cardClass}`}>
                 
                 <div className="absolute right-0 top-0 pr-8 pt-8 font-serif italic text-white/[0.03] text-8xl md:text-9xl tracking-tighter pointer-events-none group-hover:scale-110 transition-transform duration-1000 origin-top-right">
@@ -293,7 +373,7 @@ function AudienceSection() {
                   From <span className="font-serif italic text-2xl ml-2 text-white">{aud.price}</span>
                 </div>
               </div>
-            </FadeIn>
+            </div>
           ))}
         </div>
       </div>
