@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --color-terracotta: #4a2116;
+  --color-twilight: #141b2d;
+  
+  --font-serif: "Georgia", "Times New Roman", serif;
+  --font-sans: "Helvetica Neue", "Arial", sans-serif;
+}
+
+body {
+  background-color: #050505;
+  color: #ffffff;
+}
